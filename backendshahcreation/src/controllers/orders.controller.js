@@ -199,7 +199,7 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// Update order status (Admin)
+// Update order status (Admin) - KEEP ORDER POSITION
 export const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -221,9 +221,10 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
+    // DON'T update updatedAt to keep original order position
     const [updatedOrder] = await db
       .update(orders)
-      .set({ status, updatedAt: new Date() })
+      .set({ status }) // Only update status
       .where(eq(orders.id, Number(id)))
       .returning();
 
@@ -244,7 +245,7 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-// Update order details (Admin)
+// Update order details (Admin) - KEEP ORDER POSITION
 export const updateOrder = async (req, res) => {
   try {
     const { id } = req.params;
@@ -256,9 +257,10 @@ export const updateOrder = async (req, res) => {
       items,
       totalAmount,
       notes,
+      status, // ADD status here if you want to update it
     } = req.body;
 
-    const updateData = { updatedAt: new Date() };
+    const updateData = {};
     if (customerName) updateData.customerName = customerName;
     if (customerPhone) updateData.customerPhone = customerPhone;
     if (customerWhatsapp !== undefined)
@@ -268,6 +270,10 @@ export const updateOrder = async (req, res) => {
     if (items) updateData.items = items;
     if (totalAmount) updateData.totalAmount = Number(totalAmount);
     if (notes !== undefined) updateData.notes = notes;
+    if (status) updateData.status = status;
+
+    // DON'T update updatedAt to keep order position
+    // Remove this line: updateData.updatedAt = new Date();
 
     const [updatedOrder] = await db
       .update(orders)
@@ -425,12 +431,13 @@ export const bulkUpdateStatus = async (req, res) => {
   }
 };
 
-// Get order statistics (Admin Dashboard)
+// Get order statistics - Admin Dashboard
 export const getOrderStats = async (req, res) => {
   try {
-    const { startDate = "", endDate = "" } = req.query;
+    const { startDate, endDate } = req.query;
     const conditions = [];
 
+    // Date range filter
     if (startDate) {
       conditions.push(gte(orders.createdAt, new Date(startDate)));
     }
@@ -440,16 +447,17 @@ export const getOrderStats = async (req, res) => {
       conditions.push(lte(orders.createdAt, end));
     }
 
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause =
+      conditions.length === 0 ? undefined : and(...conditions);
 
     // Total orders
-    const [{ totalOrders }] = await db
+    const [totalOrdersResult] = await db
       .select({ totalOrders: sql`count(*)` })
       .from(orders)
       .where(whereClause);
 
     // Total revenue
-    const [{ totalRevenue }] = await db
+    const [totalRevenueResult] = await db
       .select({ totalRevenue: sql`COALESCE(sum(${orders.totalAmount}), 0)` })
       .from(orders)
       .where(whereClause);
@@ -459,7 +467,7 @@ export const getOrderStats = async (req, res) => {
       .select({
         status: orders.status,
         count: sql`count(*)`,
-        total: sql`sum(${orders.totalAmount})`,
+        total: sql`COALESCE(sum(${orders.totalAmount}), 0)`,
       })
       .from(orders)
       .where(whereClause)
@@ -482,10 +490,16 @@ export const getOrderStats = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        totalOrders: Number(totalOrders),
-        totalRevenue: Number(totalRevenue),
+        totalOrders: Number(totalOrdersResult.totalOrders),
+        totalRevenue: Number(totalRevenueResult.totalRevenue),
         ordersByStatus,
         recentOrders,
+        pendingOrders:
+          ordersByStatus.find((s) => s.status === "pending")?.count || 0,
+        completedOrders:
+          ordersByStatus.find((s) => s.status === "delivered")?.count || 0,
+        cancelledOrders:
+          ordersByStatus.find((s) => s.status === "cancelled")?.count || 0,
       },
     });
   } catch (error) {
