@@ -22,6 +22,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       superAdminOnly: true,
     },
     { name: "Clothes", href: "/dashboard/clothes", icon: "👕" },
+    { name: "Products", href: "/dashboard/products", icon: "👕" },
     { name: "Categories", href: "/dashboard/categories", icon: "📁" },
     { name: "Orders", href: "/dashboard/orders", icon: "🛒" },
     { name: "Contact", href: "/dashboard/contact", icon: "📧" },

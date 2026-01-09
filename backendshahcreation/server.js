@@ -8,6 +8,7 @@ import clothesRoutes from './src/routes/clothes.routes.js';
 import ordersRoutes from './src/routes/orders.routes.js'; // ADD THIS
 import aboutusRoutes from './src/routes/aboutus.routes.js'; // ADD THIS
 import contactRoutes from './src/routes/contact.routes.js'; // ADD THIS
+import productsRoutes from './src/routes/products.routes.js';
 dotenv.config();
 
 const app = express();
@@ -24,7 +25,7 @@ app.use('/api/clothes', clothesRoutes); // ADD THIS
 app.use('/api/orders', ordersRoutes); // ADD THIS
 app.use('/api/aboutus', aboutusRoutes); // ADD THIS
 app.use('/api/contact', contactRoutes); // ADD THIS
-
+app.use('/api/products', productsRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 

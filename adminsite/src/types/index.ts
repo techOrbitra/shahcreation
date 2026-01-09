@@ -32,3 +32,4 @@ export * from "./dashboard";
 export * from './category';
 export * from './clothes';
 export * from './order';
+export * from './product';

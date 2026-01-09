@@ -13,15 +13,38 @@ const client = postgres(connectionString);
 
 export const db = drizzle(client, { schema });
 
-// Relations
+// Product Relations
+export const productsRelations = relations(schema.products, ({ many }) => ({
+  productsToCategories: many(schema.productsToCategories),
+}));
+
+// Category Relations (updated to include products)
+export const categoriesRelations = relations(schema.categories, ({ many }) => ({
+  clothesToCategories: many(schema.clothesToCategories),
+  productsToCategories: many(schema.productsToCategories),
+}));
+
+// Products to Categories Relations
+export const productsToCategoriesRelations = relations(
+  schema.productsToCategories,
+  ({ one }) => ({
+    product: one(schema.products, {
+      fields: [schema.productsToCategories.productId],
+      references: [schema.products.id],
+    }),
+    category: one(schema.categories, {
+      fields: [schema.productsToCategories.categoryId],
+      references: [schema.categories.id],
+    }),
+  })
+);
+
+// Clothes Relations (keeping for backward compatibility)
 export const clothesRelations = relations(schema.clothes, ({ many }) => ({
   clothesToCategories: many(schema.clothesToCategories),
 }));
 
-export const categoriesRelations = relations(schema.categories, ({ many }) => ({
-  clothesToCategories: many(schema.clothesToCategories),
-}));
-
+// Clothes to Categories Relations (keeping for backward compatibility)
 export const clothesToCategoriesRelations = relations(
   schema.clothesToCategories,
   ({ one }) => ({

@@ -4,3 +4,4 @@ export * from './clothes.schema.js';
 export * from './orders.schema.js';
 export * from './contact.schema.js';
 export * from './aboutus.schema.js';
+export * from "./products.schema.js"; 
