@@ -217,7 +217,7 @@ export default function AdminContactPage() {
         </div>
 
         {/* Inquiries Management Card */}
-        <div className="bg-blue-800  rounded-xl shadow-sm p-6 text-black">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-xl font-bold mb-2">Customer Inquiries</h3>
@@ -244,7 +244,7 @@ export default function AdminContactPage() {
 
           <button
             onClick={() => router.push("/dashboard/contact/inquiries")}
-            className="w-full px-4 py-3 bg-blue-700 text-blue-600 font-medium rounded-lgtransition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
           >
             <svg
               className="w-5 h-5"
