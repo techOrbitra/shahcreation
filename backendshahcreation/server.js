@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
   process.env.CLIENT_URL, // e.g. http://localhost:3000
-  "https://shahcreation-u4ox.vercel.app",
+  "https://shahcreation-1.onrender.com",
 ];
 
 app.use(
