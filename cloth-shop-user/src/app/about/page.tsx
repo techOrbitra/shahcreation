@@ -1,8 +1,49 @@
+"use client";
+
+import { useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Award, Users, Heart, Zap, Target } from "lucide-react";
+import { useAboutStore } from "@/store/aboutStore";
+
+// Icon mapping
+const iconMap: Record<string, any> = {
+  Award,
+  Users,
+  Sparkles,
+  Heart,
+  Zap,
+  Target,
+};
 
 export default function About() {
+  const { content, fetchContent, isLoading } = useAboutStore();
+
+  useEffect(() => {
+    fetchContent();
+  }, [fetchContent]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="inline-block w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-foreground/60 text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!content) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-foreground/60 text-lg">No content available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -21,12 +62,17 @@ export default function About() {
               <Sparkles className="h-5 w-5 xs:h-6 xs:w-6 text-accent" />
             </div>
             <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-foreground mb-4 xs:mb-6 leading-tight">
-              Shah Creation
+              {content.heroTitle}
             </h1>
             <div className="h-1 xs:h-1.5 w-24 xs:w-32 bg-gradient-to-r from-accent to-accent/50 mx-auto rounded-full mb-6 xs:mb-8"></div>
             <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-foreground/80 max-w-3xl mx-auto leading-relaxed">
-              Crafting luxury fashion since 2025. Where elegance meets
-              innovation, and every piece tells a story.
+              {content.heroSubtitle}
+              {content.heroDescription && (
+                <>
+                  {". "}
+                  {content.heroDescription}
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -42,11 +88,10 @@ export default function About() {
                 <Target className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 text-accent" />
               </div>
               <h3 className="text-lg xs:text-xl sm:text-2xl font-black mb-3 xs:mb-4 text-foreground">
-                Our Mission
+                {content.missionTitle}
               </h3>
               <p className="text-sm xs:text-base text-foreground/70 leading-relaxed">
-                To deliver premium fashion that empowers individuals to express
-                their unique style and confidence.
+                {content.missionText}
               </p>
             </div>
 
@@ -56,11 +101,10 @@ export default function About() {
                 <Zap className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 text-accent" />
               </div>
               <h3 className="text-lg xs:text-xl sm:text-2xl font-black mb-3 xs:mb-4 text-foreground">
-                Our Vision
+                {content.visionTitle}
               </h3>
               <p className="text-sm xs:text-base text-foreground/70 leading-relaxed">
-                To become the most trusted luxury fashion brand known for
-                innovation, quality, and timeless elegance.
+                {content.visionText}
               </p>
             </div>
 
@@ -70,11 +114,10 @@ export default function About() {
                 <Heart className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 text-accent" />
               </div>
               <h3 className="text-lg xs:text-xl sm:text-2xl font-black mb-3 xs:mb-4 text-foreground">
-                Our Values
+                {content.valuesTitle}
               </h3>
               <p className="text-sm xs:text-base text-foreground/70 leading-relaxed">
-                Quality, integrity, and sustainability guide every decision we
-                make in crafting your perfect style.
+                {content.valuesText}
               </p>
             </div>
           </div>
@@ -87,38 +130,42 @@ export default function About() {
           <div className="grid lg:grid-cols-2 gap-8 xs:gap-10 sm:gap-12 md:gap-16 items-center">
             {/* Image */}
             <div className="relative h-64 xs:h-80 sm:h-96 lg:h-[500px] rounded-2xl xs:rounded-3xl overflow-hidden shadow-2xl group">
-              <Image
-                src="https://images.unsplash.com/photo-1558618047-3c8c76ca6e97?w=800"
-                alt="Shah Creation"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+              {content.storyImageUrl ? (
+                <Image
+                  src={content.storyImageUrl}
+                  alt={content.storyTitle}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-cream to-accent/20 flex items-center justify-center">
+                  <Sparkles className="w-20 h-20 text-accent/30" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             </div>
 
             {/* Content */}
             <div>
               <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black mb-4 xs:mb-6 text-foreground leading-tight">
-                Our Legacy of Excellence
+                {content.storyTitle}
               </h2>
-              <p className="text-sm xs:text-base sm:text-lg text-foreground/80 mb-4 xs:mb-6 leading-relaxed">
-                Shah Creation was born from a passion for timeless elegance and
-                superior craftsmanship. Founded with a vision to revolutionize
-                the luxury fashion industry, we believe that every piece should
-                tell a story.
-              </p>
-              <p className="text-sm xs:text-base sm:text-lg text-foreground/80 mb-6 xs:mb-8 leading-relaxed">
-                Every garment is meticulously designed and crafted to make you
-                feel extraordinary. We combine traditional artistry with modern
-                innovation, ensuring that each collection reflects the essence
-                of contemporary luxury.
-              </p>
+              {content.storyParagraph1 && (
+                <p className="text-sm xs:text-base sm:text-lg text-foreground/80 mb-4 xs:mb-6 leading-relaxed">
+                  {content.storyParagraph1}
+                </p>
+              )}
+              {content.storyParagraph2 && (
+                <p className="text-sm xs:text-base sm:text-lg text-foreground/80 mb-6 xs:mb-8 leading-relaxed">
+                  {content.storyParagraph2}
+                </p>
+              )}
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-3 xs:gap-4">
                 <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg xs:rounded-xl p-4 xs:p-6 border border-accent/20">
                   <div className="text-2xl xs:text-3xl sm:text-4xl font-black text-accent mb-1">
-                    500+
+                    {content.stats.clients}
                   </div>
                   <p className="text-xs xs:text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                     Happy Clients
@@ -126,7 +173,7 @@ export default function About() {
                 </div>
                 <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg xs:rounded-xl p-4 xs:p-6 border border-accent/20">
                   <div className="text-2xl xs:text-3xl sm:text-4xl font-black text-accent mb-1">
-                    50+
+                    {content.stats.collections}
                   </div>
                   <p className="text-xs xs:text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                     Collections
@@ -134,7 +181,7 @@ export default function About() {
                 </div>
                 <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg xs:rounded-xl p-4 xs:p-6 border border-accent/20">
                   <div className="text-2xl xs:text-3xl sm:text-4xl font-black text-accent mb-1">
-                    100%
+                    {content.stats.quality}
                   </div>
                   <p className="text-xs xs:text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                     Quality
@@ -159,53 +206,63 @@ export default function About() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 xs:gap-8">
-            {[
-              {
-                icon: Award,
-                title: "Premium Quality",
-                desc: "Carefully selected materials for durability and comfort",
-              },
-              {
-                icon: Users,
-                title: "Expert Team",
-                desc: "Experienced designers committed to your satisfaction",
-              },
-              {
-                icon: Sparkles,
-                title: "Unique Designs",
-                desc: "Exclusive collections that set you apart",
-              },
-              {
-                icon: Heart,
-                title: "Customer First",
-                desc: "Your happiness is our top priority",
-              },
-              {
-                icon: Zap,
-                title: "Fast Delivery",
-                desc: "Quick and reliable shipping to your door",
-              },
-              {
-                icon: Target,
-                title: "Best Prices",
-                desc: "Luxury fashion at competitive rates",
-              },
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="group bg-white border border-light/50 rounded-2xl xs:rounded-3xl p-6 xs:p-8 hover:shadow-xl hover:border-accent/30 transition-all duration-300"
-              >
-                <div className="h-12 w-12 xs:h-14 xs:w-14 bg-accent/10 rounded-lg xs:rounded-xl flex items-center justify-center mb-4 xs:mb-6 group-hover:bg-accent group-hover:text-white transition-all">
-                  <item.icon className="h-6 w-6 xs:h-7 xs:w-7 text-accent group-hover:text-white" />
-                </div>
-                <h3 className="text-base xs:text-lg sm:text-xl font-black mb-2 xs:mb-3 text-foreground">
-                  {item.title}
-                </h3>
-                <p className="text-xs xs:text-sm text-foreground/70">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
+            {content.features && content.features.length > 0 ? (
+              content.features.map((feature, index) => {
+                const Icon = iconMap[feature.icon] || Award;
+                return (
+                  <div
+                    key={index}
+                    className="group bg-white border border-light/50 rounded-2xl xs:rounded-3xl p-6 xs:p-8 hover:shadow-xl hover:border-accent/30 transition-all duration-300"
+                  >
+                    <div className="h-12 w-12 xs:h-14 xs:w-14 bg-accent/10 rounded-lg xs:rounded-xl flex items-center justify-center mb-4 xs:mb-6 group-hover:bg-accent group-hover:text-white transition-all">
+                      <Icon className="h-6 w-6 xs:h-7 xs:w-7 text-accent group-hover:text-white" />
+                    </div>
+                    <h3 className="text-base xs:text-lg sm:text-xl font-black mb-2 xs:mb-3 text-foreground">
+                      {feature.title}
+                    </h3>
+                    <p className="text-xs xs:text-sm text-foreground/70">
+                      {feature.description}
+                    </p>
+                  </div>
+                );
+              })
+            ) : (
+              // Fallback if no features
+              <>
+                {[
+                  {
+                    icon: Award,
+                    title: "Premium Quality",
+                    desc: "Carefully selected materials for durability and comfort",
+                  },
+                  {
+                    icon: Users,
+                    title: "Expert Team",
+                    desc: "Experienced designers committed to your satisfaction",
+                  },
+                  {
+                    icon: Sparkles,
+                    title: "Unique Designs",
+                    desc: "Exclusive collections that set you apart",
+                  },
+                ].map((item, index) => (
+                  <div
+                    key={index}
+                    className="group bg-white border border-light/50 rounded-2xl xs:rounded-3xl p-6 xs:p-8 hover:shadow-xl hover:border-accent/30 transition-all duration-300"
+                  >
+                    <div className="h-12 w-12 xs:h-14 xs:w-14 bg-accent/10 rounded-lg xs:rounded-xl flex items-center justify-center mb-4 xs:mb-6 group-hover:bg-accent group-hover:text-white transition-all">
+                      <item.icon className="h-6 w-6 xs:h-7 xs:w-7 text-accent group-hover:text-white" />
+                    </div>
+                    <h3 className="text-base xs:text-lg sm:text-xl font-black mb-2 xs:mb-3 text-foreground">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs xs:text-sm text-foreground/70">
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
       </div>
