@@ -85,12 +85,12 @@ export const useContactStore = create<ContactState>((set, get) => ({
   updateSettings: async (settingsData) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(settingsData),
       });
@@ -108,12 +108,12 @@ export const useContactStore = create<ContactState>((set, get) => ({
   updatePhoneDetails: async (phone, phoneHours) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/settings/phone`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ phone, phoneHours }),
       });
@@ -131,12 +131,12 @@ export const useContactStore = create<ContactState>((set, get) => ({
   updateAddress: async (address, workingHours) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/settings/address`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ address, workingHours }),
       });
@@ -154,11 +154,11 @@ export const useContactStore = create<ContactState>((set, get) => ({
   resetSettings: async () => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/settings/reset`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -177,11 +177,11 @@ export const useContactStore = create<ContactState>((set, get) => ({
       const formData = new FormData();
       formData.append('images', file);
 
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/products/upload-images`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: formData,
       });
@@ -207,10 +207,10 @@ export const useContactStore = create<ContactState>((set, get) => ({
         }
       });
 
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/inquiries/all?${params}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -231,10 +231,10 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Fetch stats
   fetchStats: async () => {
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/inquiries/stats`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -269,12 +269,12 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Toggle read status
   toggleReadStatus: async (id, isRead) => {
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/inquiries/${id}/read`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ isRead }),
       });
@@ -289,12 +289,12 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Bulk mark as read
   bulkMarkAsRead: async (ids) => {
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/inquiries/bulk-mark-read`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ ids }),
       });
@@ -310,11 +310,11 @@ export const useContactStore = create<ContactState>((set, get) => ({
   deleteInquiry: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/inquiries/${id}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -331,12 +331,12 @@ export const useContactStore = create<ContactState>((set, get) => ({
   bulkDeleteInquiries: async (ids) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/inquiries/bulk-delete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ ids }),
       });
@@ -353,10 +353,10 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Export inquiries
   exportInquiries: async () => {
     try {
-      const token = localStorage.getItem('token');
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/contact/inquiries/export`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 

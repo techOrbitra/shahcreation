@@ -64,7 +64,7 @@ export const useOrdersStore = create<OrdersState>()(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       },
       body: JSON.stringify(orderData),
     });
@@ -135,7 +135,7 @@ export const useOrdersStore = create<OrdersState>()(
 
         const response = await fetch(`${API_URL}/orders?${queryParams}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
 
@@ -159,7 +159,7 @@ export const useOrdersStore = create<OrdersState>()(
       try {
         const response = await fetch(`${API_URL}/orders/${id}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
 
@@ -187,7 +187,7 @@ export const useOrdersStore = create<OrdersState>()(
 
         const response = await fetch(`${API_URL}/orders/stats?${queryParams}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
 
@@ -207,7 +207,7 @@ export const useOrdersStore = create<OrdersState>()(
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
           body: JSON.stringify(orderData),
         });
@@ -237,7 +237,7 @@ export const useOrdersStore = create<OrdersState>()(
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
           body: JSON.stringify({ status }),
         });
@@ -262,7 +262,7 @@ export const useOrdersStore = create<OrdersState>()(
         const response = await fetch(`${API_URL}/orders/${id}`, {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
 
@@ -287,7 +287,7 @@ export const useOrdersStore = create<OrdersState>()(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
           body: JSON.stringify({ ids }),
         });
@@ -313,7 +313,7 @@ export const useOrdersStore = create<OrdersState>()(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
           body: JSON.stringify({ ids, status }),
         });
