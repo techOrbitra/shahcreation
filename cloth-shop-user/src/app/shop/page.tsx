@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { clothes, categories } from "@/lib/data";
 import FeaturedGrid from "@/components/FeaturedGrid";
 import { Input } from "@/components/ui/input";
+import ShopSkeleton from "@/components/ShopSkeleton";
+
 import {
   Select,
   SelectContent,
@@ -13,47 +14,67 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal, X } from "lucide-react";
+import { useProductsStore } from "@/store/productsStore";
 
 export default function Shop() {
-  const [filteredClothes, setFilteredClothes] = useState(clothes);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(10000);
+  const {
+    products,
+    categories,
+    total,
+    isLoading,
+    fetchProducts,
+    fetchCategories,
+    filters,
+    setFilters,
+    clearFilters,
+  } = useProductsStore();
+
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    let results = clothes;
-
-    if (search) {
-      results = results.filter(
-        (c) =>
-          c.name.toLowerCase().includes(search.toLowerCase()) ||
-          c.description.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    if (category !== "all") {
-      const cat = categories.find((c) => c.slug === category);
-      if (cat) results = results.filter((c) => c.categoryIds.includes(cat.id));
-    }
-
-    results = results.filter((c) => c.price >= minPrice && c.price <= maxPrice);
-
-    setFilteredClothes(results);
-  }, [search, category, minPrice, maxPrice]);
+    fetchCategories();
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
+    // Handle URL category param
     const cat = searchParams.get("category");
-    if (cat) setCategory(cat);
+    if (cat && cat !== filters.category) {
+      setFilters({ category: cat });
+      fetchProducts({ category: cat });
+    }
   }, [searchParams]);
 
-  const clearFilters = () => {
-    setSearch("");
-    setCategory("all");
-    setMinPrice(0);
-    setMaxPrice(10000);
+  useEffect(() => {
+    // Auto-fetch when filters change
+    const debounce = setTimeout(() => {
+      fetchProducts(filters);
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [filters.search, filters.category, filters.minPrice, filters.maxPrice]);
+
+  const handleSearchChange = (value: string) => {
+    setFilters({ search: value });
   };
+
+  const handleCategoryChange = (value: string) => {
+    setFilters({ category: value });
+  };
+
+  const handleMinPriceChange = (value: number) => {
+    setFilters({ minPrice: value });
+  };
+
+  const handleMaxPriceChange = (value: number) => {
+    setFilters({ maxPrice: value });
+  };
+
+  const hasActiveFilters =
+    filters.search ||
+    filters.category !== "all" ||
+    filters.minPrice > 0 ||
+    filters.maxPrice < 10000;
 
   return (
     <section className="min-h-screen py-20 bg-gradient-to-b from-cream to-white">
@@ -78,10 +99,7 @@ export default function Shop() {
                   <SlidersHorizontal className="h-6 w-6 text-accent" />
                   Filters
                 </h3>
-                {(search ||
-                  category !== "all" ||
-                  minPrice > 0 ||
-                  maxPrice < 10000) && (
+                {hasActiveFilters && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -103,9 +121,10 @@ export default function Shop() {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                   <Input
                     placeholder="Search products..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    value={filters.search}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     className="pl-12 h-12 rounded-2xl border-2 border-light focus:border-accent transition-all"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -115,7 +134,10 @@ export default function Shop() {
                 <label className="text-sm font-bold uppercase tracking-wide text-slate-700">
                   Category
                 </label>
-                <Select value={category} onValueChange={setCategory}>
+                <Select
+                  value={filters.category}
+                  onValueChange={handleCategoryChange}
+                >
                   <SelectTrigger className="h-12 rounded-2xl border-2 border-light focus:border-accent font-semibold">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -149,9 +171,12 @@ export default function Shop() {
                     <Input
                       type="number"
                       placeholder="0"
-                      value={minPrice || ""}
-                      onChange={(e) => setMinPrice(+e.target.value || 0)}
+                      value={filters.minPrice || ""}
+                      onChange={(e) =>
+                        handleMinPriceChange(+e.target.value || 0)
+                      }
                       className="h-12 rounded-2xl border-2 border-light focus:border-accent"
+                      disabled={isLoading}
                     />
                   </div>
                   <div>
@@ -161,34 +186,38 @@ export default function Shop() {
                     <Input
                       type="number"
                       placeholder="10000"
-                      value={maxPrice || ""}
-                      onChange={(e) => setMaxPrice(+e.target.value || 10000)}
+                      value={filters.maxPrice || ""}
+                      onChange={(e) =>
+                        handleMaxPriceChange(+e.target.value || 10000)
+                      }
                       className="h-12 rounded-2xl border-2 border-light focus:border-accent"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Active Filters Summary */}
-              {(search ||
-                category !== "all" ||
-                minPrice > 0 ||
-                maxPrice < 10000) && (
+              {hasActiveFilters && (
                 <div className="pt-6 border-t border-slate-200">
                   <p className="text-sm font-semibold text-slate-600 mb-3">
                     Active Filters:
                   </p>
                   <div className="space-y-2">
-                    {search && (
+                    {filters.search && (
                       <div className="text-xs px-3 py-2 bg-accent/10 rounded-lg border border-accent/30">
-                        Search: <span className="font-bold">{search}</span>
+                        Search:{" "}
+                        <span className="font-bold">{filters.search}</span>
                       </div>
                     )}
-                    {category !== "all" && (
+                    {filters.category !== "all" && (
                       <div className="text-xs px-3 py-2 bg-accent/10 rounded-lg border border-accent/30">
                         Category:{" "}
                         <span className="font-bold">
-                          {categories.find((c) => c.slug === category)?.name}
+                          {
+                            categories.find((c) => c.slug === filters.category)
+                              ?.name
+                          }
                         </span>
                       </div>
                     )}
@@ -203,14 +232,16 @@ export default function Shop() {
             <div className="mb-8 flex items-center justify-between">
               <p className="text-lg font-semibold text-foreground">
                 <span className="text-3xl font-black text-foreground">
-                  {filteredClothes.length}
+                  {total}
                 </span>{" "}
                 Products Found
               </p>
             </div>
 
-            {filteredClothes.length ? (
-              <FeaturedGrid clothes={filteredClothes} />
+            {isLoading ? (
+              <ShopSkeleton />
+            ) : products.length ? (
+              <FeaturedGrid clothes={products} />
             ) : (
               <div className="text-center py-32 bg-cream/50 backdrop-blur-sm rounded-3xl shadow-xl">
                 <div className="text-8xl mb-8">😔</div>

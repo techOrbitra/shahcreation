@@ -11,6 +11,7 @@ import {
   updateStock,
   getRelatedProducts,
   uploadProductImages,
+  getCategories,
 } from "../controllers/products.controller.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.middleware.js";
@@ -19,6 +20,7 @@ const router = Router();
 
 // Public routes
 router.get("/", getAllProducts);
+router.get("/categories", getCategories);
 router.get("/slug/:slug", getProductBySlug);
 router.get("/:slug/related", getRelatedProducts);
 

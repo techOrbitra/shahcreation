@@ -1,7 +1,8 @@
 "use client";
-import { use } from "react";
+
+import React, { use } from "react";
 import { notFound } from "next/navigation";
-import { clothes } from "@/lib/data";
+import { useProductsStore } from "@/store/productsStore";
 import ProductDetailContent from "@/components/ProductDetailContent";
 
 interface Props {
@@ -9,9 +10,29 @@ interface Props {
 }
 
 export default function ProductPage({ params }: Props) {
+  // ✅ unwrap params correctly
   const { slug } = use(params);
-  const product = clothes.find((c) => c.slug === slug);
-  if (!product) notFound();
+
+  const fetchProductBySlug = useProductsStore(
+    (state) => state.fetchProductBySlug
+  );
+
+  const [product, setProduct] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const loadProduct = async () => {
+      const data = await fetchProductBySlug(slug);
+      if (!data) {
+        notFound();
+        return;
+      }
+      setProduct(data);
+    };
+
+    loadProduct();
+  }, [slug]);
+
+  if (!product) return null;
 
   return <ProductDetailContent product={product} />;
 }

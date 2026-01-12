@@ -38,25 +38,54 @@ export default function Cart({ open, onOpenChange }: Props) {
     if (!checkoutData.name || !checkoutData.phone || cartItems.length === 0)
       return;
 
-    const orderText = `🛍️ *New Order*\n\n👤 Name: ${
-      checkoutData.name
-    }\n📱 Phone: ${checkoutData.phone}\n📲 WhatsApp: ${
-      checkoutData.whatsapp
-    }\n📍 Address: ${checkoutData.address}\n\n${cartItems
+    const orderText = `
+    🛍️ *NEW ORDER RECEIVED*
+    
+    ━━━━━━━━━━━━━━━
+    👤 *Customer Details*
+    ━━━━━━━━━━━━━━━
+    • Name: ${checkoutData.name}
+    • Phone: ${checkoutData.phone}
+    • WhatsApp: ${checkoutData.whatsapp || "-"}
+    • Address: ${checkoutData.address || "-"}
+    
+    ━━━━━━━━━━━━━━━
+    🛒 *Order Items*
+    ━━━━━━━━━━━━━━━
+    ${cartItems
       .map(
         (item) =>
-          `• ${item.name} x${item.quantity} - ₹${item.price * item.quantity}`
+          `• ${item.name} × ${item.quantity}  —  ₹${item.price * item.quantity}`
       )
-      .join("\n")}\n\n💰 *Total: ₹${total}*`;
+      .join("\n")}
+    
+    ━━━━━━━━━━━━━━━
+    💰 *Order Total*
+    ━━━━━━━━━━━━━━━
+    ₹${total}
+    
+    ━━━━━━━━━━━━━━━
+    📌 *Payment Method*
+    ━━━━━━━━━━━━━━━
+    Cash on Delivery (COD)
+    
+    🙏 Thank you for shopping with *Shah Creation*
+    `;
 
-    const whatsappUrl = `https://wa.me/+91YOUR_NUMBER?text=${encodeURIComponent(
-      orderText
-    )}`; // Replace YOUR_NUMBER
-    window.open(whatsappUrl, "_blank");
+    // ✅ IMPORTANT: replace with YOUR business number
+    const businessNumber = "919876543210"; // <-- NO +, NO spaces
+
+    const encodedText = encodeURIComponent(orderText);
+
+    // Universal WhatsApp URL
+    const whatsappUrl = `https://wa.me/${businessNumber}?text=${encodedText}`;
+
+    // ✅ Works on Android, iOS, Desktop
+    window.location.href = whatsappUrl;
+
     clearCart();
     onOpenChange(false);
   };
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-[420px] sm:w-[540px] p-0">

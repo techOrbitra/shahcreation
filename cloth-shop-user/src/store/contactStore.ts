@@ -1,12 +1,17 @@
-import { create } from 'zustand';
-import type { ContactInquiry, CreateInquiryData, ContactSettings, InquiryStats, InquiryFilters } from '@/types/contact';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+import { create } from "zustand";
+import axiosInstance from "@/lib/axios";
+import type {
+  ContactInquiry,
+  CreateInquiryData,
+  ContactSettings,
+  InquiryStats,
+  InquiryFilters,
+} from "@/types/contact";
 
 interface ContactState {
   // Settings
   settings: ContactSettings | null;
-  
+
   // Inquiries
   inquiries: ContactInquiry[];
   stats: InquiryStats | null;
@@ -20,7 +25,7 @@ interface ContactState {
   };
   unreadCount: number;
   filters: InquiryFilters;
-  
+
   // Actions - Settings
   fetchSettings: () => Promise<void>;
   updateSettings: (data: Partial<ContactSettings>) => Promise<void>;
@@ -28,7 +33,7 @@ interface ContactState {
   updateAddress: (address: string, workingHours?: string) => Promise<void>;
   resetSettings: () => Promise<void>;
   uploadMapImage: (file: File) => Promise<string>;
-  
+
   // Actions - Inquiries
   fetchInquiries: (filters?: Partial<InquiryFilters>) => Promise<void>;
   fetchStats: () => Promise<void>;
@@ -57,11 +62,11 @@ export const useContactStore = create<ContactState>((set, get) => ({
   filters: {
     page: 1,
     limit: 20,
-    search: '',
-    isRead: '',
-    startDate: '',
-    endDate: '',
-    sort: 'newest',
+    search: "",
+    isRead: "",
+    startDate: "",
+    endDate: "",
+    sort: "newest",
   },
 
   setFilters: (filters) => {
@@ -71,13 +76,11 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Fetch settings (public)
   fetchSettings: async () => {
     try {
-      const response = await fetch(`${API_URL}/contact/settings`);
-      if (!response.ok) throw new Error('Failed to fetch settings');
-      const data = await response.json();
-      set({ settings: data.data });
+      const response = await axiosInstance.get("/contact/settings");
+      set({ settings: response.data.data });
     } catch (error: any) {
-      console.error('Fetch settings error:', error);
-      set({ error: error.message });
+      console.error("Fetch settings error:", error);
+      set({ error: error.response?.data?.message || error.message });
     }
   },
 
@@ -85,21 +88,16 @@ export const useContactStore = create<ContactState>((set, get) => ({
   updateSettings: async (settingsData) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(settingsData),
-      });
-
-      if (!response.ok) throw new Error('Failed to update settings');
-      const data = await response.json();
-      set({ settings: data.data, isLoading: false });
+      const response = await axiosInstance.put(
+        "/contact/settings",
+        settingsData
+      );
+      set({ settings: response.data.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to update settings",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -108,21 +106,16 @@ export const useContactStore = create<ContactState>((set, get) => ({
   updatePhoneDetails: async (phone, phoneHours) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/settings/phone`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ phone, phoneHours }),
+      const response = await axiosInstance.patch("/contact/settings/phone", {
+        phone,
+        phoneHours,
       });
-
-      if (!response.ok) throw new Error('Failed to update phone');
-      const data = await response.json();
-      set({ settings: data.data, isLoading: false });
+      set({ settings: response.data.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to update phone",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -131,21 +124,16 @@ export const useContactStore = create<ContactState>((set, get) => ({
   updateAddress: async (address, workingHours) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/settings/address`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ address, workingHours }),
+      const response = await axiosInstance.patch("/contact/settings/address", {
+        address,
+        workingHours,
       });
-
-      if (!response.ok) throw new Error('Failed to update address');
-      const data = await response.json();
-      set({ settings: data.data, isLoading: false });
+      set({ settings: response.data.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to update address",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -154,19 +142,13 @@ export const useContactStore = create<ContactState>((set, get) => ({
   resetSettings: async () => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/settings/reset`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to reset settings');
-      const data = await response.json();
-      set({ settings: data.data, isLoading: false });
+      const response = await axiosInstance.post("/contact/settings/reset");
+      set({ settings: response.data.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to reset settings",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -175,22 +157,23 @@ export const useContactStore = create<ContactState>((set, get) => ({
   uploadMapImage: async (file: File) => {
     try {
       const formData = new FormData();
-      formData.append('images', file);
+      formData.append("images", file);
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/products/upload-images`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await axiosInstance.post(
+        "/products/upload-images",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to upload image');
-      const data = await response.json();
-      return data.data[0]; // Return first image URL
+      return response.data.data[0];
     } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error(
+        error.response?.data?.message || "Failed to upload image"
+      );
     }
   },
 
@@ -200,49 +183,38 @@ export const useContactStore = create<ContactState>((set, get) => ({
     try {
       const currentFilters = { ...get().filters, ...filters };
       const params = new URLSearchParams();
-      
+
       Object.entries(currentFilters).forEach(([key, value]) => {
-        if (value !== '' && value !== null && value !== undefined) {
+        if (value !== "" && value !== null && value !== undefined) {
           params.append(key, value.toString());
         }
       });
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/inquiries/all?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.get(
+        `/contact/inquiries/all?${params}`
+      );
 
-      if (!response.ok) throw new Error('Failed to fetch inquiries');
-      const data = await response.json();
-      
       set({
-        inquiries: data.data,
-        pagination: data.pagination,
-        unreadCount: data.unreadCount,
+        inquiries: response.data.data,
+        pagination: response.data.pagination,
+        unreadCount: response.data.unreadCount,
         isLoading: false,
       });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to fetch inquiries",
+        isLoading: false,
+      });
     }
   },
 
   // Fetch stats
   fetchStats: async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/inquiries/stats`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      const data = await response.json();
-      set({ stats: data.data });
+      const response = await axiosInstance.get("/contact/inquiries/stats");
+      set({ stats: response.data.data });
     } catch (error: any) {
-      console.error('Fetch stats error:', error);
+      console.error("Fetch stats error:", error);
     }
   },
 
@@ -250,18 +222,13 @@ export const useContactStore = create<ContactState>((set, get) => ({
   createInquiry: async (inquiryData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch(`${API_URL}/contact/inquiries`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(inquiryData),
-      });
-
-      if (!response.ok) throw new Error('Failed to submit inquiry');
+      await axiosInstance.post("/contact/inquiries", inquiryData);
       set({ isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to submit inquiry",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -269,17 +236,7 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Toggle read status
   toggleReadStatus: async (id, isRead) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/inquiries/${id}/read`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isRead }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update status');
+      await axiosInstance.patch(`/contact/inquiries/${id}/read`, { isRead });
       await get().fetchInquiries();
     } catch (error: any) {
       throw error;
@@ -289,17 +246,7 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Bulk mark as read
   bulkMarkAsRead: async (ids) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/inquiries/bulk-mark-read`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ids }),
-      });
-
-      if (!response.ok) throw new Error('Failed to mark as read');
+      await axiosInstance.post("/contact/inquiries/bulk-mark-read", { ids });
       await get().fetchInquiries();
     } catch (error: any) {
       throw error;
@@ -310,19 +257,14 @@ export const useContactStore = create<ContactState>((set, get) => ({
   deleteInquiry: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/inquiries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to delete inquiry');
+      await axiosInstance.delete(`/contact/inquiries/${id}`);
       await get().fetchInquiries();
       set({ isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to delete inquiry",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -331,21 +273,14 @@ export const useContactStore = create<ContactState>((set, get) => ({
   bulkDeleteInquiries: async (ids) => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/inquiries/bulk-delete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ids }),
-      });
-
-      if (!response.ok) throw new Error('Failed to delete inquiries');
+      await axiosInstance.post("/contact/inquiries/bulk-delete", { ids });
       await get().fetchInquiries();
       set({ isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to delete inquiries",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -353,16 +288,8 @@ export const useContactStore = create<ContactState>((set, get) => ({
   // Export inquiries
   exportInquiries: async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/contact/inquiries/export`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to export');
-      const data = await response.json();
-      return data.data;
+      const response = await axiosInstance.get("/contact/inquiries/export");
+      return response.data.data;
     } catch (error: any) {
       throw error;
     }

@@ -1,199 +1,178 @@
 import { create } from "zustand";
-import type { Product, CreateProductData, ProductFilters } from "@/types";
+import axiosInstance from "@/lib/axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+/* ================= TYPES ================= */
+
+interface Product {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  price: number;
+  oldPrice?: number;
+  image: string; // thumbnail
+  images: string[]; // gallery
+  categoryIds: number[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface FilterState {
+  search: string;
+  category: string;
+  minPrice: number;
+  maxPrice: number;
+  page: number;
+  limit: number;
+}
+interface FilterState {
+  search: string;
+  category: string;
+  minPrice: number;
+  maxPrice: number;
+  page: number;
+  limit: number;
+  featured?: boolean; // ✅ ADD THIS
+}
 
 interface ProductsState {
   products: Product[];
+  categories: Category[];
+  total: number;
   isLoading: boolean;
   error: string | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-  filters: ProductFilters;
+  filters: FilterState;
 
-  // Actions
-  fetchProducts: (filters?: Partial<ProductFilters>) => Promise<void>;
-  createProduct: (data: CreateProductData) => Promise<void>;
-  updateProduct: (
-    id: number,
-    data: Partial<CreateProductData>
-  ) => Promise<void>;
-  deleteProduct: (id: number) => Promise<void>;
-  toggleFeatured: (id: number, isFeatured: boolean) => Promise<void>;
-  uploadImages: (files: File[]) => Promise<string[]>;
-  setFilters: (filters: Partial<ProductFilters>) => void;
+  fetchProducts: (filters?: Partial<FilterState>) => Promise<void>;
+  fetchCategories: () => Promise<void>;
+  fetchProductBySlug: (slug: string) => Promise<Product | null>;
+  setFilters: (filters: Partial<FilterState>) => void;
+  clearFilters: () => void;
 }
+
+/* ================= STORE ================= */
 
 export const useProductsStore = create<ProductsState>((set, get) => ({
   products: [],
+  categories: [],
+  total: 0,
   isLoading: false,
   error: null,
-  pagination: {
-    page: 1,
-    limit: 12,
-    total: 0,
-    pages: 0,
-  },
+
   filters: {
+    search: "",
+    category: "all",
+    minPrice: 0,
+    maxPrice: 10000,
     page: 1,
     limit: 12,
-    search: "",
-    category: "",
-    productType: "",
-    minPrice: 0,
-    maxPrice: 1000000,
-    sort: "newest",
-    featured: "",
   },
+
+  /* -------- Filters -------- */
 
   setFilters: (filters) => {
     set({ filters: { ...get().filters, ...filters } });
   },
 
-  fetchProducts: async (filters) => {
-    set({ isLoading: true, error: null });
+  clearFilters: () => {
+    set({
+      filters: {
+        search: "",
+        category: "all",
+        minPrice: 0,
+        maxPrice: 10000,
+        page: 1,
+        limit: 12,
+      },
+    });
+  },
+
+  /* -------- Categories -------- */
+
+  fetchCategories: async () => {
     try {
-      const currentFilters = { ...get().filters, ...filters };
-      const params = new URLSearchParams();
+      const res = await axiosInstance.get("/products/categories");
+      set({ categories: res.data.data || [] });
+    } catch (err) {
+      console.error("Fetch categories failed:", err);
+      set({ categories: [] });
+    }
+  },
 
-      Object.entries(currentFilters).forEach(([key, value]) => {
-        if (value !== "" && value !== null && value !== undefined) {
-          params.append(key, value.toString());
-        }
+  /* -------- Products -------- */
+
+  fetchProducts: async (customFilters = {}) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const filters = {
+        ...get().filters,
+        ...customFilters,
+        page: 1,
+      };
+
+      set({ filters });
+
+      const params = new URLSearchParams({
+        page: String(filters.page),
+        limit: String(filters.limit),
       });
 
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/products?${params}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      if (filters.search) params.append("search", filters.search);
+      if (filters.category && filters.category !== "all")
+        params.append("category", filters.category);
+      if (filters.minPrice > 0)
+        params.append("minPrice", String(filters.minPrice));
+      if (filters.maxPrice < 10000)
+        params.append("maxPrice", String(filters.maxPrice));
 
-      if (!response.ok) throw new Error("Failed to fetch products");
+      const res = await axiosInstance.get(`/products?${params}`);
 
-      const data = await response.json();
+      const products: Product[] = res.data.data.map((p: any) => ({
+        ...p,
+        categoryIds: p.categories?.map((c: any) => c.id) || [],
+        images: Array.isArray(p.images) ? p.images : [],
+        image: p.images?.[0] || "", // thumbnail
+      }));
+
       set({
-        products: data.data,
-        pagination: data.pagination,
+        products,
+        total: res.data.pagination?.total || 0,
         isLoading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message || "Failed to fetch products",
+        isLoading: false,
+      });
     }
   },
 
-  uploadImages: async (files: File[]) => {
+  /* -------- Single Product -------- */
+
+  fetchProductBySlug: async (slug: string) => {
     try {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append("images", file);
-      });
+      const response = await axiosInstance.get(
+        `/products/slug/${slug}` // ✅ CORRECT
+      );
 
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/products/upload-images`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const product = response.data.data;
 
-      if (!response.ok) throw new Error("Failed to upload images");
-
-      const data = await response.json();
-      return data.data; // Returns array of Cloudinary URLs
+      return {
+        ...product,
+        categoryIds: product.categories?.map((c: any) => c.id) || [],
+        images: Array.isArray(product.images) ? product.images : [],
+        image: product.images?.[0] || "",
+      };
     } catch (error: any) {
-      throw new Error(error.message);
-    }
-  },
-
-  createProduct: async (productData) => {
-    set({ isLoading: true, error: null });
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(productData),
-      });
-
-      if (!response.ok) throw new Error("Failed to create product");
-
-      await get().fetchProducts();
-      set({ isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
-      throw error;
-    }
-  },
-
-  updateProduct: async (id, productData) => {
-    set({ isLoading: true, error: null });
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(productData),
-      });
-
-      if (!response.ok) throw new Error("Failed to update product");
-
-      await get().fetchProducts();
-      set({ isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
-      throw error;
-    }
-  },
-
-  deleteProduct: async (id) => {
-    set({ isLoading: true, error: null });
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/products/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to delete product");
-
-      await get().fetchProducts();
-      set({ isLoading: false });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
-      throw error;
-    }
-  },
-
-  toggleFeatured: async (id, isFeatured) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/products/${id}/featured`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isFeatured }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update featured status");
-
-      await get().fetchProducts();
-    } catch (error: any) {
-      set({ error: error.message });
-      throw error;
+      console.error("Failed to fetch product:", error);
+      return null;
     }
   },
 }));

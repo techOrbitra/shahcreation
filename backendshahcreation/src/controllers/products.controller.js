@@ -44,6 +44,28 @@ export const uploadProductImages = async (req, res) => {
     });
   }
 };
+// get all categories (Public)
+// Get all categories (Public) - ADD THIS TO YOUR CONTROLLER
+export const getCategories = async (req, res) => {
+  try {
+    const allCategories = await db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        slug: categories.slug,
+      })
+      .from(categories)
+      .orderBy(categories.name);
+
+    res.status(200).json({
+      success: true,
+      data: allCategories,
+    });
+  } catch (error) {
+    console.error("Get categories error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 // Get all products with pagination & filters (Public)
 export const getAllProducts = async (req, res) => {
@@ -87,7 +109,8 @@ export const getAllProducts = async (req, res) => {
     }
 
     // Category filter
-    if (category) {
+    // Category filter
+    if (category && category !== "all") {
       const [cat] = await db
         .select()
         .from(categories)
