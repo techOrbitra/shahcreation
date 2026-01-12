@@ -42,16 +42,15 @@ export const login = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: {
-        admin: {
-          id: admin.id,
-          email: admin.email,
-          name: admin.name,
-          role: admin.role,
-        },
-        accessToken,
-        refreshToken,
-      },
+      data: { admin, accessToken },
+    });
+
+    // ✅ SET HTTP-ONLY COOKIE (server-side only)
+    res.cookie("adminToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, // 24h
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -125,5 +124,24 @@ export const getCurrentAdmin = async (req, res) => {
   } catch (error) {
     console.error("Get current admin error:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    // Verify refresh token (your JWT logic)
+    const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+    const payload = { id: decoded.id, email: decoded.email };
+
+    const newAccessToken = generateAccessToken(payload);
+
+    res.json({
+      success: true,
+      data: { accessToken: newAccessToken },
+    });
+  } catch (error) {
+    res.status(401).json({ success: false, message: "Invalid refresh token" });
   }
 };

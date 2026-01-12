@@ -1,27 +1,38 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwt } from "jsonwebtoken"; 
+export async function middleware(request: NextRequest) {
+  // Public routes
+  if (request.nextUrl.pathname.match(/^\/(login|logout)?$/)) {
+    return NextResponse.next();
+  }
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get("accessToken")?.value;
-  const { pathname } = request.nextUrl;
+  // Check localStorage token (client sends via header)
+  const token =
+    request.headers.get("x-auth-token") ||
+    request.cookies.get("adminToken")?.value;
 
-  // Public paths that don't require authentication
-  const publicPaths = ["/login", "/"];
-  const isPublicPath = publicPaths.includes(pathname);
-
-  // If trying to access protected route without token
-  if (!isPublicPath && pathname.startsWith("/dashboard") && !token) {
+  if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If trying to access login with token
-  if (pathname === "/login" && token) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
+  try {
+    // ✅ Use YOUR JWT_SECRET from .env
+    const secret = process.env.JWT_SECRET || "fallback-secret";
+    const decoded = jwt.verify(token, secret) as { id: number; email: string };
 
-  return NextResponse.next();
+    // Add user to request headers
+    const response = NextResponse.next();
+    response.headers.set("x-admin-id", decoded.id.toString());
+    return response;
+  } catch (error) {
+    console.error("Middleware JWT error:", error);
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    response.cookies.delete("adminToken");
+    return response;
+  }
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };
