@@ -14,38 +14,36 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const adminUrl = process.env.ADMIN_FRONTEND_URL?.trim();
-const userUrl = process.env.USER_FRONTEND_URL?.trim();
+const adminFrontend = process.env.ADMIN_FRONTEND_URL?.replace(/\/$/, ""); // Remove trailing slash
+const userFrontend = process.env.USER_FRONTEND_URL?.replace(/\/$/, "");
 const extraOrigins = process.env.EXTRA_CORS_ORIGINS
   ? process.env.EXTRA_CORS_ORIGINS.split(",")
       .map((o) => o.trim())
       .filter(Boolean)
   : [];
 
-const allowedOrigins = [adminUrl, userUrl, ...extraOrigins].filter(Boolean);
-
-const allowAllOrigins = allowedOrigins.length === 0;
+const allowedOrigins = [adminFrontend, userFrontend, ...extraOrigins].filter(
+  Boolean
+);
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Server-to-server / Postman / curl (no Origin header)
+    origin: (origin, callback) => {
+      // Allow non-browser requests (Postman, curl)
       if (!origin) return callback(null, true);
 
-      if (allowAllOrigins) {
-        // Fallback: allow everything but log a warning
-        console.warn("CORS fallback: allowing origin", origin);
-        return callback(null, true);
-      }
-
+      // Allow exact matches only
       if (allowedOrigins.includes(origin)) {
+        console.log("✅ CORS Allowed:", origin);
         return callback(null, true);
       }
 
-      console.warn("CORS blocked origin:", origin);
-      return callback(new Error("Not allowed by CORS"));
+      console.log("❌ CORS Blocked:", origin);
+      return callback(new Error(`CORS: Origin ${origin} not allowed`), false);
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
 
