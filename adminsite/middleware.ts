@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwt } from "jsonwebtoken"; 
+import jwt from "jsonwebtoken";
 export async function middleware(request: NextRequest) {
   // Public routes
   if (request.nextUrl.pathname.match(/^\/(login|logout)?$/)) {
-    return NextResponse.next();
+    return NextResponse.next(); 
   }
 
   // Check localStorage token (client sends via header)
