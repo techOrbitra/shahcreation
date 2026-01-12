@@ -14,23 +14,41 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = "https://shahcreation-cnja.vercel.app/";
+const adminUrl = process.env.ADMIN_FRONTEND_URL?.trim();
+const userUrl = process.env.USER_FRONTEND_URL?.trim();
+const extraOrigins = process.env.EXTRA_CORS_ORIGINS
+  ? process.env.EXTRA_CORS_ORIGINS.split(",")
+      .map((o) => o.trim())
+      .filter(Boolean)
+  : [];
+
+const allowedOrigins = [adminUrl, userUrl, ...extraOrigins].filter(Boolean);
+
+const allowAllOrigins = allowedOrigins.length === 0;
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow server-to-server / Postman
+      // Server-to-server / Postman / curl (no Origin header)
       if (!origin) return callback(null, true);
+
+      if (allowAllOrigins) {
+        // Fallback: allow everything but log a warning
+        console.warn("CORS fallback: allowing origin", origin);
+        return callback(null, true);
+      }
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
+      console.warn("CORS blocked origin:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 // Routes
