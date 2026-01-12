@@ -16,49 +16,52 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     const verifyAuth = async () => {
-      // Check if we have a token
       const token = localStorage.getItem("accessToken");
 
+      // ✅ IMMEDIATE REJECT if no token
       if (!token) {
         router.replace("/login");
         return;
       }
 
-      // If we have token but no admin data, verify it
-      if (!admin) {
-        try {
-          await checkAuth();
-          setChecking(false);
-        } catch (error) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          router.replace("/login");
-        }
-      } else {
+      // ✅ IMMEDIATE APPROVE if already authenticated + admin data
+      if (isAuthenticated && admin) {
         setChecking(false);
+        return;
+      }
+
+      // ✅ ONLY CALL API if we need to verify token
+      try {
+        await checkAuth();
+        setChecking(false);
+      } catch (error) {
+        // Token invalid, clear & redirect
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        router.replace("/login");
       }
     };
 
     verifyAuth();
-  }, [admin, checkAuth, router]);
+  }, []); // ✅ EMPTY DEPS = run ONCE only
 
-  // Show loading state while checking auth
+  // Show loading while checking auth
   if (checking || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Verifying...</p>
         </div>
       </div>
     );
   }
 
-  // If not authenticated, don't render children
+  // Not authenticated
   if (!isAuthenticated || !admin) {
     return null;
   }
 
-  // Render protected content
+  // ✅ Render protected content (NO REPEATED CALLS)
   return <>{children}</>;
 }

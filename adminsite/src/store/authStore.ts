@@ -20,6 +20,20 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
+// ✅ Token validation helper (client-side JWT decode)
+const isTokenValid = (token: string | null): boolean => {
+  if (!token) return false;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const now = Math.floor(Date.now() / 1000);
+    // ✅ 5min buffer before expiry
+    return payload.exp > now + 300;
+  } catch {
+    return false;
+  }
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
   admin: null,
   isAuthenticated: false,
@@ -63,9 +77,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: async () => {
     const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      set({ isAuthenticated: false, admin: null });
-      throw new Error("No token found");
+    // ✅ SKIP API CALL if token invalid
+    if (!isTokenValid(token)) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      set({ isAuthenticated: false, admin: null, isLoading: false });
+      return;
     }
 
     set({ isLoading: true });

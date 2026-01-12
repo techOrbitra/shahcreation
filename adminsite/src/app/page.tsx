@@ -9,14 +9,12 @@ export default function HomePage() {
   const { isAuthenticated, checkAuth } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
-
     if (isAuthenticated) {
       router.replace("/dashboard");
     } else {
       router.replace("/login");
     }
-  }, [isAuthenticated, checkAuth, router]);
+  }, [isAuthenticated, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
