@@ -14,10 +14,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = [
-  process.env.CLIENT_URL, // e.g. http://localhost:3000
-  "https://shahcreation-1.onrender.com",
-];
+const allowedOrigins = [process.env.CLIENT_URL, process.env.LIVE_URL];
 
 app.use(
   cors({
