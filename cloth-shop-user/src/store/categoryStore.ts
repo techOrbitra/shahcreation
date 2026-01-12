@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { apiClient } from '@/lib/axios';
+import axiosInstance  from '@/lib/axios';
 import type { Category, CreateCategoryData, UpdateCategoryData, ApiResponse } from '@/types';
 
 interface CategoryState {
@@ -26,7 +26,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   fetchCategories: async (search) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.get<ApiResponse<Category[]>>('/categories', {
+      const response = await axiosInstance.get<ApiResponse<Category[]>>('/categories', {
         params: search ? { search } : undefined,
       });
       set({ categories: response.data.data || [], isLoading: false });
@@ -41,7 +41,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   createCategory: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiClient.post<ApiResponse<Category>>('/categories', data);
+      await axiosInstance.post<ApiResponse<Category>>('/categories', data);
       await get().fetchCategories(get().searchQuery);
       set({ isLoading: false });
     } catch (error: any) {
@@ -56,7 +56,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   updateCategory: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      await apiClient.put<ApiResponse<Category>>(`/categories/${id}`, data);
+      await axiosInstance.put<ApiResponse<Category>>(`/categories/${id}`, data);
       await get().fetchCategories(get().searchQuery);
       set({ isLoading: false });
     } catch (error: any) {
@@ -71,7 +71,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   deleteCategory: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await apiClient.delete(`/categories/${id}`);
+      await axiosInstance.delete(`/categories/${id}`);
       await get().fetchCategories(get().searchQuery);
       set({ isLoading: false });
     } catch (error: any) {
