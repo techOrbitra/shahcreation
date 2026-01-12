@@ -5,45 +5,59 @@ import authRoutes from "./src/routes/auth.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 import categoryRoutes from "./src/routes/category.routes.js";
 import clothesRoutes from "./src/routes/clothes.routes.js";
-import ordersRoutes from "./src/routes/orders.routes.js"; // ADD THIS
-import aboutusRoutes from "./src/routes/aboutus.routes.js"; // ADD THIS
-import contactRoutes from "./src/routes/contact.routes.js"; // ADD THIS
+import ordersRoutes from "./src/routes/orders.routes.js";
+import aboutusRoutes from "./src/routes/aboutus.routes.js";
+import contactRoutes from "./src/routes/contact.routes.js";
 import productsRoutes from "./src/routes/products.routes.js";
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const adminFrontend = process.env.ADMIN_FRONTEND_URL?.replace(/\/$/, ""); // Remove trailing slash
-const userFrontend = process.env.USER_FRONTEND_URL?.replace(/\/$/, "");
+// ✅ FIXED CORS - Allow custom headers
+const adminUrl = process.env.ADMIN_FRONTEND_URL?.trim();
+const userUrl = process.env.USER_FRONTEND_URL?.trim();
 const extraOrigins = process.env.EXTRA_CORS_ORIGINS
   ? process.env.EXTRA_CORS_ORIGINS.split(",")
       .map((o) => o.trim())
       .filter(Boolean)
   : [];
 
-const allowedOrigins = [adminFrontend, userFrontend, ...extraOrigins].filter(
-  Boolean
-);
+const allowedOrigins = [adminUrl, userUrl, ...extraOrigins].filter(Boolean);
+
+console.log("✅ CORS allowed origins:", allowedOrigins);
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow non-browser requests (Postman, curl)
+    origin: function (origin, callback) {
       if (!origin) return callback(null, true);
 
-      // Allow exact matches only
-      if (allowedOrigins.includes(origin)) {
-        console.log("✅ CORS Allowed:", origin);
+      if (allowedOrigins.length === 0) {
+        console.warn("⚠️ No CORS origins configured, allowing all");
         return callback(null, true);
       }
 
-      console.log("❌ CORS Blocked:", origin);
-      return callback(new Error(`CORS: Origin ${origin} not allowed`), false);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn("❌ CORS blocked origin:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    // ✅ CRITICAL FIX: Allow x-auth-token header
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-auth-token", // ✅ ADD THIS
+      "X-Requested-With",
+      "Accept",
+    ],
+    exposedHeaders: ["Content-Length", "X-Auth-Token"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
 
@@ -53,13 +67,15 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use("/api/clothes", clothesRoutes); // ADD THIS
-app.use("/api/orders", ordersRoutes); // ADD THIS
-app.use("/api/aboutus", aboutusRoutes); // ADD THIS
-app.use("/api/contact", contactRoutes); // ADD THIS
+app.use("/api/clothes", clothesRoutes);
+app.use("/api/orders", ordersRoutes);
+app.use("/api/aboutus", aboutusRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/products", productsRoutes);
 
-app.get("/health", (req, res) => res.json({ status: "OK" }));
+app.get("/health", (req, res) =>
+  res.json({ status: "OK", timestamp: Date.now() })
+);
 
 app.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
