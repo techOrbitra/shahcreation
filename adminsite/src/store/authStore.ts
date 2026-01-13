@@ -166,7 +166,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         credentials
       );
       const { admin, accessToken, refreshToken } = response.data.data;
+      console.log(admin, accessToken, refreshToken);
 
+      // Store tokens
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
 

@@ -24,7 +24,12 @@ const extraOrigins = process.env.EXTRA_CORS_ORIGINS
       .filter(Boolean)
   : [];
 
-const allowedOrigins = [adminUrl, userUrl, ...extraOrigins].filter(Boolean);
+const allowedOrigins = [
+  adminUrl,
+  userUrl,
+  "http://localhost:3000",
+  ...extraOrigins,
+].filter(Boolean);
 
 console.log("✅ CORS allowed origins:", allowedOrigins);
 
