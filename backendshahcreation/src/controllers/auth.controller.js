@@ -40,17 +40,17 @@ export const login = async (req, res) => {
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
-    res.status(200).json({
-      success: true,
-      data: { admin, accessToken },
-    });
-
     // ✅ SET HTTP-ONLY COOKIE (server-side only)
     res.cookie("adminToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000, // 24h
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { admin, accessToken },
     });
   } catch (error) {
     console.error("Login error:", error);
