@@ -164,6 +164,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
 
   login: async (credentials) => {
+    console.log("Attempting login with credentials:", credentials);
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.post<AuthResponse>(
