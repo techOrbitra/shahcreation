@@ -142,11 +142,16 @@ const isTokenValid = (token: string | null): boolean => {
     if (parts.length !== 3) return false;
 
     // ✅ Type-safe atob
-    const payloadString = Buffer.from(parts[1], "base64").toString("utf-8");
-    const payload = JSON.parse(payloadString);
+    // const payloadString = Buffer.from(parts[1], "base64").toString("utf-8");
+    // const payload = JSON.parse(payloadString);
 
+    // const now = Math.floor(Date.now() / 1000);
+    // return (payload.exp as number) > now + 300;
+
+     const payload = JSON.parse(atob(parts[1]));
     const now = Math.floor(Date.now() / 1000);
-    return (payload.exp as number) > now + 300;
+
+    return payload.exp > now + 300;
   } catch {
     return false;
   }

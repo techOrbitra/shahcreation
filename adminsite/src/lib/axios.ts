@@ -61,17 +61,35 @@ const getAuthToken = (): string | null => {
 };
 
 // Request interceptor ✅ FIXED types
-apiClient.interceptors.request.use(
-  (config: any) => {
-    const token = getAuthToken();
-    if (token) {
-      (config.headers as any).Authorization = `Bearer ${token}`;
-      (config.headers as any)["x-auth-token"] = token;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// apiClient.interceptors.request.use(
+  
+//   (config: any) => {
+//     const token = getAuthToken();
+//     if (token) {
+//       (config.headers as any).Authorization = `Bearer ${token}`;
+//       (config.headers as any)["x-auth-token"] = token;
+//     }
+//     return config;
+//   },
+//   (error) => Promise.reject(error)
+// );
+
+apiClient.interceptors.request.use((config: any) => {
+  const skipAuthRoutes = ["/auth/login", "/auth/refresh"];
+
+  if (skipAuthRoutes.some((url) => config.url?.includes(url))) {
+    return config; // ❌ DO NOT attach token
+  }
+
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    config.headers["x-auth-token"] = token;
+  }
+
+  return config;
+});
+
 
 // Response interceptor ✅ FIXED types
 apiClient.interceptors.response.use(
