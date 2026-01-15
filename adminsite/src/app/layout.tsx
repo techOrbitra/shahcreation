@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthInitializer from "@/app/providers/AuthInitializer";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AuthInitializer>{children}</AuthInitializer>
+      </body>
     </html>
   );
 }

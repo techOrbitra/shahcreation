@@ -13,11 +13,11 @@ export default function LoginPage() {
   });
 
   // Redirect if already logged in
-  useEffect(() => {
-    if (isAuthenticated && admin) {
-      router.replace("/dashboard");
-    }
-  }, [isAuthenticated, admin, router]);
+  // useEffect(() => {
+  //   if (isAuthenticated && admin) {
+  //     router.replace("/dashboard");
+  //   }
+  // }, [isAuthenticated, admin, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +25,7 @@ export default function LoginPage() {
       await login(formData);
       // i want to redirect to dashboard after login
       console.log("Login successful and redirecting...");
-      // router.replace("/dashboard");
+      router.replace("/dashboard");
     } catch (error) {
       console.error("Login failed");
     }
