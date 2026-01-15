@@ -25,7 +25,7 @@ export default function LoginPage() {
       await login(formData);
       // i want to redirect to dashboard after login
       console.log("Login successful and redirecting...");
-      router.replace("/dashboard");
+      // router.replace("/dashboard");
     } catch (error) {
       console.error("Login failed");
     }

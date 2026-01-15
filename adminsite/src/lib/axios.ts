@@ -141,7 +141,6 @@
 
 // export default apiClient;
 
-
 import axios from "axios";
 
 const API_BASE_URL =
@@ -159,8 +158,7 @@ export const apiClient = axios.create({
    =========================== */
 apiClient.interceptors.request.use(
   (config) => {
-    // ❌ Do NOT attach token for login
-    if (config.url?.includes("/auth/login")) {
+    if (config.url?.includes("/auth/login") || config.url?.includes("/auth/refresh")) {
       return config;
     }
 
@@ -177,21 +175,63 @@ apiClient.interceptors.request.use(
 /* ===========================
    RESPONSE INTERCEPTOR
    =========================== */
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve(token);
+  });
+
+  failedQueue = [];
+};
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // ❌ DO NOT refresh token on login failure
-    if (error.config?.url?.includes("/auth/login")) {
-      return Promise.reject(error);
-    }
+  async (error) => {
+    const originalRequest = error.config;
 
-    // 🔒 Only handle protected-route 401
-    if (error.response?.status === 401) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/auth/login")
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return apiClient(originalRequest);
+        });
+      }
 
-      if (typeof window !== "undefined") {
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) throw new Error("No refresh token");
+
+        const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refreshToken,
+        });
+
+        const newAccessToken = res.data.data.accessToken;
+
+        localStorage.setItem("accessToken", newAccessToken);
+
+        apiClient.defaults.headers.Authorization = `Bearer ${newAccessToken}`;
+        processQueue(null, newAccessToken);
+
+        return apiClient(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
+        localStorage.clear();
         window.location.href = "/login";
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
       }
     }
 
