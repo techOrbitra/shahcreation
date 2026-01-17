@@ -167,12 +167,12 @@ export const createOrder = async (req, res) => {
         item.id && item.name && item.quantity && item.price && item.image
     );
 
-    if (!validItems) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid item structure",
-      });
-    }
+    // if (!validItems) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Invalid item structure",
+    //   });
+    // }
 
     // Create order
     const [newOrder] = await db

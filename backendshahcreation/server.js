@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 5000;
 // ✅ FIXED CORS - Allow custom headers
 const adminUrl = process.env.ADMIN_FRONTEND_URL?.trim();
 const userUrl = process.env.USER_FRONTEND_URL?.trim();
+const clienturl = process.env.CLIENT_URL;
 const extraOrigins = process.env.EXTRA_CORS_ORIGINS
   ? process.env.EXTRA_CORS_ORIGINS.split(",")
       .map((o) => o.trim())
@@ -28,6 +29,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   adminUrl,
   userUrl,
+  clienturl,
   ...extraOrigins,
 ].filter(Boolean);
 
