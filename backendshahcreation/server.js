@@ -25,9 +25,9 @@ const extraOrigins = process.env.EXTRA_CORS_ORIGINS
   : [];
 
 const allowedOrigins = [
+  "http://localhost:5173",
   adminUrl,
   userUrl,
-  "http://localhost:5173",
   ...extraOrigins,
 ].filter(Boolean);
 
