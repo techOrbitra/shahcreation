@@ -38,34 +38,19 @@ console.log("✅ CORS allowed origins:", allowedOrigins);
 app.use(cookieParser());
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
+      // Allow server-to-server / Postman
       if (!origin) return callback(null, true);
-
-      if (allowedOrigins.length === 0) {
-        console.warn("⚠️ No CORS origins configured, allowing all");
-        return callback(null, true);
-      }
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      console.warn("❌ CORS blocked origin:", origin);
+      console.error("❌ CORS blocked:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
-    credentials: true,
-    // ✅ CRITICAL FIX: Allow x-auth-token header
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-auth-token", // ✅ ADD THIS
-      "X-Requested-With",
-      "Accept",
-    ],
-    exposedHeaders: ["Content-Length", "X-Auth-Token"],
+    credentials: true, // 🔥 REQUIRED FOR COOKIES
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
   }),
 );
 

@@ -41,12 +41,17 @@ export const login = async (req, res) => {
 
     // ✅ SET HTTP-ONLY COOKIE (server-side only)
     res.cookie("adminToken", accessToken, {
+      // httpOnly: true,
+      // // secure: process.env.NODE_ENV === "production",
+      // // sameSite: "strict",
+      // secure: false,
+      // sameSite: "lax",
+      // maxAge: 24 * 60 * 60 * 1000, // 24h
       httpOnly: true,
-      // secure: process.env.NODE_ENV === "production",
-      // sameSite: "strict",
-      secure: false,
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000, // 24h
+      secure: true, // 🔒 REQUIRED (HTTPS only)
+      sameSite: "none", // 🌍 REQUIRED (cross-domain)
+      path: "/", // 📌 IMPORTANT
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
     res.status(200).json({
