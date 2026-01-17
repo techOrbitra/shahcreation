@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 import authRoutes from "./src/routes/auth.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 import categoryRoutes from "./src/routes/category.routes.js";
@@ -34,7 +35,7 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 console.log("✅ CORS allowed origins:", allowedOrigins);
-
+app.use(cookieParser());
 app.use(
   cors({
     origin: function (origin, callback) {

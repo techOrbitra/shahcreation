@@ -38,19 +38,20 @@ export const login = async (req, res) => {
 
     const payload = { id: admin.id, email: admin.email, role: admin.role };
     const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
 
     // ✅ SET HTTP-ONLY COOKIE (server-side only)
     res.cookie("adminToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      // secure: process.env.NODE_ENV === "production",
+      // sameSite: "strict",
+      secure: false,
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24h
     });
 
     res.status(200).json({
       success: true,
-      data: { admin, accessToken },
+      data: { admin },
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -87,11 +88,50 @@ export const getProfile = async (req, res) => {
 };
 
 // Get current admin profile
+// export const getCurrentAdmin = async (req, res) => {
+//   try {
+//     const adminId = req.admin.id;
+
+//     // Fetch full admin details from database
+//     const [admin] = await db
+//       .select({
+//         id: admins.id,
+//         email: admins.email,
+//         name: admins.name,
+//         role: admins.role,
+//         isActive: admins.isActive,
+//         createdAt: admins.createdAt,
+//       })
+//       .from(admins)
+//       .where(eq(admins.id, adminId))
+//       .limit(1);
+
+//     if (!admin) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Admin not found" });
+//     }
+
+//     if (!admin.isActive) {
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Account is inactive" });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       data: admin,
+//     });
+//   } catch (error) {
+//     console.error("Get current admin error:", error);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };\
+
 export const getCurrentAdmin = async (req, res) => {
   try {
     const adminId = req.admin.id;
 
-    // Fetch full admin details from database
     const [admin] = await db
       .select({
         id: admins.id,
@@ -105,16 +145,8 @@ export const getCurrentAdmin = async (req, res) => {
       .where(eq(admins.id, adminId))
       .limit(1);
 
-    if (!admin) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Admin not found" });
-    }
-
-    if (!admin.isActive) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Account is inactive" });
+    if (!admin || !admin.isActive) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     res.status(200).json({
@@ -123,7 +155,10 @@ export const getCurrentAdmin = async (req, res) => {
     });
   } catch (error) {
     console.error("Get current admin error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
