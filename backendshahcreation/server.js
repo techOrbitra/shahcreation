@@ -27,7 +27,7 @@ const extraOrigins = process.env.EXTRA_CORS_ORIGINS
 const allowedOrigins = [
   adminUrl,
   userUrl,
-  "http://localhost:3000",
+  "http://localhost:5173",
   ...extraOrigins,
 ].filter(Boolean);
 
@@ -63,7 +63,7 @@ app.use(
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -79,9 +79,9 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/products", productsRoutes);
 
 app.get("/health", (req, res) =>
-  res.json({ status: "OK", timestamp: Date.now() })
+  res.json({ status: "OK", timestamp: Date.now() }),
 );
 
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
+  console.log(`🚀 Server running on http://localhost:${PORT}`),
 );
